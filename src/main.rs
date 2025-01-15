@@ -6,16 +6,22 @@ use crossterm::{
     execute,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
+use inquire::Text;
+use log::{info, warn};
+use pretty_env_logger;
 use ratatui::widgets::Gauge;
 use ratatui::{
     Frame, Terminal,
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders},
+    widgets::{Block, BorderType, Borders, List, ListItem},
 };
 use serde::Serialize;
 use std::{error::Error, io, thread, time::Duration};
+/*
+
+
 
 /// コマンドライン引数の定義
 #[derive(Parser, Debug, Serialize)]
@@ -110,6 +116,60 @@ fn main() -> Result<()> {
 
         // 更新間隔
         thread::sleep(Duration::from_millis(50));
+    }
+
+    Ok(())
+}
+*/
+
+fn main() -> Result<()> {
+ 
+  
+    pretty_env_logger::init();
+
+    for i in 1..11 {
+        info!("いんふぉー{}",i);
+        warn!("けいこくー{}",i);
+    }
+
+    let stdout = io::stdout();
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    let items = vec![
+        ListItem::new("Option 1"),
+        ListItem::new("Option 2"),
+        ListItem::new("Option 3"),
+    ];
+
+    // ユーザーに名前を尋ねる
+    let name = Text::new("What's your name?")
+        .with_default("John Doe") // デフォルト値を設定
+        .prompt(); // 入力を受け取る
+
+    match name {
+        Ok(name) => println!("Hello, {}!", name), // 成功した場合
+        Err(e) => eprintln!("Error: {}", e),      // エラーの場合
+    }
+    loop {
+        let mut items_ = List::new(items.clone());
+        terminal.draw(|f| {
+            let size = f.size();
+            let block = Block::default().borders(Borders::ALL).title("Menu");
+            f.render_widget(block, size);
+
+            let list = items_.block(Block::default().borders(Borders::ALL));
+            f.render_widget(list, size);
+        })?;
+
+        // キー入力の確認
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                if key.code == KeyCode::Char('q') {
+                    break; // "q"で終了
+                }
+            }
+        }
     }
 
     Ok(())
